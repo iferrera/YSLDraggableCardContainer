@@ -48,6 +48,19 @@ typedef NS_ENUM(NSInteger, MoveSlope) {
     return self;
 }
 
+- (instancetype)initWithCoder:(NSCoder *)aDecoder
+{
+	self = [super initWithCoder:aDecoder];
+	if (self){
+		[self setUp];
+		UITapGestureRecognizer *tapGesture = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(cardViewTap:)];
+		[self addGestureRecognizer:tapGesture];
+		
+		_canDraggableDirection = YSLDraggableDirectionLeft | YSLDraggableDirectionLeft;
+	}
+	return self;
+}
+
 - (void)setUp
 {
     _moveSlope = MoveSlopeTop;
