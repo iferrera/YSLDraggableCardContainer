@@ -62,6 +62,8 @@ typedef NS_OPTIONS(NSInteger, YSLDraggableDirection) {
 - (void)movePositionWithDirection:(YSLDraggableDirection)direction isAutomatic:(BOOL)isAutomatic undoHandler:(void (^)())undoHandler;
 
 - (UIView *)getCurrentView;
+- (NSInteger)getCurrentIndex;
 
+- (void)loadThisView:(UIView*)view withIndex:(NSInteger)index;
 
 @end

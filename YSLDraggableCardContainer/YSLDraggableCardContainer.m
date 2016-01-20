@@ -99,13 +99,58 @@ typedef NS_ENUM(NSInteger, MoveSlope) {
     return [_currentViews firstObject];
 }
 
+- (NSInteger)getCurrentIndex
+{
+	return _currentIndex;
+}
+
+- (void)loadThisView:(UIView *)view withIndex:(NSInteger)index
+{
+	
+	for (UIView *view in self.subviews) {
+		[view removeFromSuperview];
+	}
+	[_currentViews removeAllObjects];
+	
+	_defaultFrame = view.frame;
+	_cardCenterX = view.center.x;
+	_cardCenterY = view.center.y;
+	
+	[self addSubview:view];
+	[self sendSubviewToBack:view];
+	[_currentViews addObject:view];
+	
+	_currentIndex = index;
+	
+	view.frame = CGRectMake(_defaultFrame.origin.x, _defaultFrame.origin.y + kCard_Margin, _defaultFrame.size.width, _defaultFrame.size.height);
+	view.transform = CGAffineTransformScale(CGAffineTransformIdentity,kSecondCard_Scale,kSecondCard_Scale);
+	_loadedIndex++;
+	
+	
+	
+	
+	UIPanGestureRecognizer *gesture = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(handlePanGesture:)];
+	[view addGestureRecognizer:gesture];
+	
+	__weak YSLDraggableCardContainer *weakself = self;
+	[UIView animateWithDuration:0.35
+						  delay:0.0
+						options:UIViewAnimationOptionCurveLinear | UIViewAnimationOptionAllowUserInteraction
+					 animations:^{
+							 view.center = CGPointMake(-1 * (weakself.frame.size.width), view.center.y);
+							 [weakself cardViewDefaultScale];
+					 } completion:^(BOOL finished) {
+//						 [view removeFromSuperview];
+					 }];
+}
+
 #pragma mark -- Private
 
 - (void)loadNextView
 {
     if (self.dataSource && [self.dataSource respondsToSelector:@selector(cardContainerViewNumberOfViewInIndex:)]) {
         NSInteger index = [self.dataSource cardContainerViewNumberOfViewInIndex:_loadedIndex];
-        
+		
         // all cardViews Dragging end
         if (index != 0 && index == _currentIndex) {
             if (self.delegate && [self.delegate respondsToSelector:@selector(cardContainerViewDidCompleteAll:)]) {
@@ -113,12 +158,12 @@ typedef NS_ENUM(NSInteger, MoveSlope) {
             }
             return;
         }
-        
+		
         // load next cardView
         if (_loadedIndex < index) {
-            
+			
             NSInteger preloadViewCont = index <= kPreloadViewCount ? index : kPreloadViewCount;
-            
+			
             for (NSInteger i = _currentViews.count; i < preloadViewCont; i++) {
                 if (self.dataSource && [self.dataSource respondsToSelector:@selector(cardContainerViewNextViewWithIndex:)]) {
                     UIView *view = [self.dataSource cardContainerViewNextViewWithIndex:_loadedIndex];
@@ -126,11 +171,11 @@ typedef NS_ENUM(NSInteger, MoveSlope) {
                         _defaultFrame = view.frame;
                         _cardCenterX = view.center.x;
                         _cardCenterY = view.center.y;
-                        
+						
                         [self addSubview:view];
                         [self sendSubviewToBack:view];
                         [_currentViews addObject:view];
-                        
+						
                         if (i == 1 && _currentIndex != 0) {
                             view.frame = CGRectMake(_defaultFrame.origin.x, _defaultFrame.origin.y + kCard_Margin, _defaultFrame.size.width, _defaultFrame.size.height);
                             view.transform = CGAffineTransformScale(CGAffineTransformIdentity,kSecondCard_Scale,kSecondCard_Scale);
