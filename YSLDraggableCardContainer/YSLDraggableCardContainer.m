@@ -94,9 +94,9 @@ typedef NS_ENUM(NSInteger, MoveSlope) {
     [self cardViewDirectionAnimation:direction isAutomatic:isAutomatic undoHandler:nil];
 }
 
-- (UIView *)getCurrentView
+- (UIViewController *)getCurrentView
 {
-    return [_currentViews firstObject];
+	return [_currentViews firstObject];
 }
 
 - (NSInteger)getCurrentIndex
@@ -104,7 +104,7 @@ typedef NS_ENUM(NSInteger, MoveSlope) {
 	return _currentIndex;
 }
 
-- (void)loadThisView:(UIView *)view withIndex:(NSInteger)index
+- (void)loadThisView:(UIViewController *)viewController withIndex:(NSInteger)index
 {
 	
 	for (UIView *view in self.subviews) {
@@ -112,32 +112,32 @@ typedef NS_ENUM(NSInteger, MoveSlope) {
 	}
 	[_currentViews removeAllObjects];
 	
-	_defaultFrame = view.frame;
-	_cardCenterX = view.center.x;
-	_cardCenterY = view.center.y;
+	_defaultFrame = viewController.view.frame;
+	_cardCenterX = viewController.view.center.x;
+	_cardCenterY = viewController.view.center.y;
 	
-	[self addSubview:view];
-	[self sendSubviewToBack:view];
-	[_currentViews addObject:view];
+	[self addSubview:viewController.view];
+	[self sendSubviewToBack:viewController.view];
+	[_currentViews addObject:viewController];
 	
 	_currentIndex = index;
 	
-	view.frame = CGRectMake(_defaultFrame.origin.x, _defaultFrame.origin.y + kCard_Margin, _defaultFrame.size.width, _defaultFrame.size.height);
-	view.transform = CGAffineTransformScale(CGAffineTransformIdentity,kSecondCard_Scale,kSecondCard_Scale);
+	viewController.view.frame = CGRectMake(_defaultFrame.origin.x, _defaultFrame.origin.y + kCard_Margin, _defaultFrame.size.width, _defaultFrame.size.height);
+	viewController.view.transform = CGAffineTransformScale(CGAffineTransformIdentity,kSecondCard_Scale,kSecondCard_Scale);
 	_loadedIndex++;
 	
 	
 	
 	
 	UIPanGestureRecognizer *gesture = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(handlePanGesture:)];
-	[view addGestureRecognizer:gesture];
+	[viewController.view addGestureRecognizer:gesture];
 	
 	__weak YSLDraggableCardContainer *weakself = self;
 	[UIView animateWithDuration:0.35
 						  delay:0.0
 						options:UIViewAnimationOptionCurveLinear | UIViewAnimationOptionAllowUserInteraction
 					 animations:^{
-							 view.center = CGPointMake(-1 * (weakself.frame.size.width), view.center.y);
+							 viewController.view.center = CGPointMake(-1 * (weakself.frame.size.width), viewController.view.center.y);
 							 [weakself cardViewDefaultScale];
 					 } completion:^(BOOL finished) {
 //						 [view removeFromSuperview];
@@ -166,7 +166,8 @@ typedef NS_ENUM(NSInteger, MoveSlope) {
 			
             for (NSInteger i = _currentViews.count; i < preloadViewCont; i++) {
                 if (self.dataSource && [self.dataSource respondsToSelector:@selector(cardContainerViewNextViewWithIndex:)]) {
-                    UIView *view = [self.dataSource cardContainerViewNextViewWithIndex:_loadedIndex];
+					UIViewController * viewController = [self.dataSource cardContainerViewNextViewWithIndex:_loadedIndex];
+					UIView *view = viewController.view;
                     if (view) {
                         _defaultFrame = view.frame;
                         _cardCenterX = view.center.x;
@@ -174,7 +175,7 @@ typedef NS_ENUM(NSInteger, MoveSlope) {
 						
                         [self addSubview:view];
                         [self sendSubviewToBack:view];
-                        [_currentViews addObject:view];
+                        [_currentViews addObject:viewController];
 						
                         if (i == 1 && _currentIndex != 0) {
                             view.frame = CGRectMake(_defaultFrame.origin.x, _defaultFrame.origin.y + kCard_Margin, _defaultFrame.size.width, _defaultFrame.size.height);
@@ -192,7 +193,7 @@ typedef NS_ENUM(NSInteger, MoveSlope) {
             }
         }
         
-        UIView *view = [self getCurrentView];
+        UIView *view = [[self getCurrentView] view];
         if (view) {
             UIPanGestureRecognizer *gesture = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(handlePanGesture:)];
             [view addGestureRecognizer:gesture];
@@ -202,7 +203,8 @@ typedef NS_ENUM(NSInteger, MoveSlope) {
 - (void)cardViewDirectionAnimation:(YSLDraggableDirection)direction isAutomatic:(BOOL)isAutomatic undoHandler:(void (^)())undoHandler
 {
     if (!_isInitialAnimation) { return; }
-    UIView *view = [self getCurrentView];
+	UIViewController *viewController = [self getCurrentView];
+	UIView *view = viewController.view;
     if (!view) { return; }
     
     __weak YSLDraggableCardContainer *weakself = self;
@@ -224,7 +226,7 @@ typedef NS_ENUM(NSInteger, MoveSlope) {
     }
     
     if (!undoHandler) {
-        [_currentViews removeObject:view];
+        [_currentViews removeObject:viewController];
         _currentIndex++;
         [self loadNextView];
     }
@@ -262,6 +264,7 @@ typedef NS_ENUM(NSInteger, MoveSlope) {
                          } completion:^(BOOL finished) {
                              if (!undoHandler) {
                                  [view removeFromSuperview];
+								 [viewController removeFromParentViewController];
                              } else  {
                                  if (undoHandler) { undoHandler(); }
                              }
@@ -291,6 +294,7 @@ typedef NS_ENUM(NSInteger, MoveSlope) {
                                               } completion:^(BOOL finished) {
                                                   if (!undoHandler) {
                                                       [view removeFromSuperview];
+													  [viewController removeFromParentViewController];
                                                   } else  {
                                                       if (undoHandler) { undoHandler(); }
                                                   }
@@ -301,7 +305,7 @@ typedef NS_ENUM(NSInteger, MoveSlope) {
 
 - (void)cardViewUpDateScale
 {
-    UIView *view = [self getCurrentView];
+    UIView *view = [[self getCurrentView] view];
     
     float ratio_w = fabs((view.center.x - _cardCenterX) / _cardCenterX);
     float ratio_h = fabs((view.center.y - _cardCenterY) / _cardCenterY);
@@ -309,7 +313,7 @@ typedef NS_ENUM(NSInteger, MoveSlope) {
     
     if (_currentViews.count == 2) {
         if (ratio <= 1) {
-            UIView *view = _currentViews[1];
+            UIView *view = [_currentViews[1] view];
             view.transform = CGAffineTransformIdentity;
             view.frame = CGRectMake(_defaultFrame.origin.x, _defaultFrame.origin.y + (kCard_Margin - (ratio * kCard_Margin)), _defaultFrame.size.width, _defaultFrame.size.height);
             view.transform = CGAffineTransformScale(CGAffineTransformIdentity,kSecondCard_Scale + (ratio * (1 - kSecondCard_Scale)),kSecondCard_Scale + (ratio * (1 - kSecondCard_Scale)));
@@ -318,13 +322,13 @@ typedef NS_ENUM(NSInteger, MoveSlope) {
     if (_currentViews.count == 3) {
         if (ratio <= 1) {
             {
-                UIView *view = _currentViews[1];
+                UIView *view = [_currentViews[1] view];
                 view.transform = CGAffineTransformIdentity;
                 view.frame = CGRectMake(_defaultFrame.origin.x, _defaultFrame.origin.y + (kCard_Margin - (ratio * kCard_Margin)), _defaultFrame.size.width, _defaultFrame.size.height);
                 view.transform = CGAffineTransformScale(CGAffineTransformIdentity,kSecondCard_Scale + (ratio * (1 - kSecondCard_Scale)),kSecondCard_Scale + (ratio * (1 - kSecondCard_Scale)));
             }
             {
-                UIView *view = _currentViews[2];
+                UIView *view = [_currentViews[2] view];
                 view.transform = CGAffineTransformIdentity;
                 view.frame = CGRectMake(_defaultFrame.origin.x, _defaultFrame.origin.y + ((kCard_Margin * 2) - (ratio * kCard_Margin)), _defaultFrame.size.width, _defaultFrame.size.height);
                 view.transform = CGAffineTransformScale(CGAffineTransformIdentity,kTherdCard_Scale + (ratio * (kSecondCard_Scale - kTherdCard_Scale)),kTherdCard_Scale + (ratio * (kSecondCard_Scale - kTherdCard_Scale)));
@@ -337,13 +341,13 @@ typedef NS_ENUM(NSInteger, MoveSlope) {
 {
     if (self.delegate && [self.delegate respondsToSelector:@selector(cardContainderView:updatePositionWithDraggableView:draggableDirection:widthRatio:heightRatio:)]) {
         
-        [self.delegate cardContainderView:self updatePositionWithDraggableView:[self getCurrentView]
+        [self.delegate cardContainderView:self updatePositionWithDraggableView:[self getCurrentView].view
                         draggableDirection:YSLDraggableDirectionDefault
                                 widthRatio:0 heightRatio:0];
     }
 
     for (int i = 0; i < _currentViews.count; i++) {
-        UIView *view = _currentViews[i];
+        UIView *view = [_currentViews[i] view];
         if (i == 0) {
             view.transform = CGAffineTransformIdentity;
             view.frame = _defaultFrame;
@@ -363,11 +367,11 @@ typedef NS_ENUM(NSInteger, MoveSlope) {
 
 - (void)viewInitialAnimation
 {
-    for (UIView *view in _currentViews) {
-        view.alpha = 0.0;
+    for (UIViewController *viewController in _currentViews) {
+        viewController.view.alpha = 0.0;
     }
     
-    UIView *view = [self getCurrentView];
+    UIView *view = [self getCurrentView].view;
     if (!view) { return; }
     __weak YSLDraggableCardContainer *weakself = self;
     view.alpha = 1.0;
@@ -394,8 +398,8 @@ typedef NS_ENUM(NSInteger, MoveSlope) {
                                                                }
                                                                completion:^(BOOL finished) {
                                                                    
-                                                                   for (UIView *view in _currentViews) {
-                                                                       view.alpha = 1.0;
+                                                                   for (UIViewController *viewController in _currentViews) {
+                                                                       viewController.view.alpha = 1.0;
                                                                    }
                                                                    
                                                                    [UIView animateWithDuration:0.25f

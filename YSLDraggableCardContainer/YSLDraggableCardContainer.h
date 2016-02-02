@@ -21,7 +21,7 @@ typedef NS_OPTIONS(NSInteger, YSLDraggableDirection) {
 
 @protocol YSLDraggableCardContainerDataSource <NSObject>
 
-- (UIView *)cardContainerViewNextViewWithIndex:(NSInteger)index;
+- (UIViewController *)cardContainerViewNextViewWithIndex:(NSInteger)index;
 - (NSInteger)cardContainerViewNumberOfViewInIndex:(NSInteger)index;
 
 @end
@@ -61,9 +61,9 @@ typedef NS_OPTIONS(NSInteger, YSLDraggableDirection) {
 - (void)movePositionWithDirection:(YSLDraggableDirection)direction isAutomatic:(BOOL)isAutomatic;
 - (void)movePositionWithDirection:(YSLDraggableDirection)direction isAutomatic:(BOOL)isAutomatic undoHandler:(void (^)())undoHandler;
 
-- (UIView *)getCurrentView;
+- (UIViewController *)getCurrentView;
 - (NSInteger)getCurrentIndex;
 
-- (void)loadThisView:(UIView*)view withIndex:(NSInteger)index;
+- (void)loadThisView:(UIViewController*)view withIndex:(NSInteger)index;
 
 @end
