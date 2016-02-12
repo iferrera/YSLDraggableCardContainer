@@ -195,6 +195,11 @@ typedef NS_ENUM(NSInteger, MoveSlope) {
         
         UIView *view = [[self getCurrentView] view];
         if (view) {
+			
+			if (_delegate && [_delegate respondsToSelector:@selector(cardContainderView:didLoadView:)]){
+				[_delegate cardContainderView:self didLoadView:[self getCurrentView]];
+			}
+			
             UIPanGestureRecognizer *gesture = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(handlePanGesture:)];
             [view addGestureRecognizer:gesture];
         }
