@@ -132,6 +132,10 @@ typedef NS_ENUM(NSInteger, MoveSlope) {
 	UIPanGestureRecognizer *gesture = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(handlePanGesture:)];
 	[viewController.view addGestureRecognizer:gesture];
 	
+	if (_delegate && [_delegate respondsToSelector:@selector(cardContainderView:didLoadView:)]){
+		[_delegate cardContainderView:self didLoadView:[self getCurrentView]];
+	}
+	
 	__weak YSLDraggableCardContainer *weakself = self;
 	[UIView animateWithDuration:0.35
 						  delay:0.0
@@ -141,6 +145,7 @@ typedef NS_ENUM(NSInteger, MoveSlope) {
 							 [weakself cardViewDefaultScale];
 					 } completion:^(BOOL finished) {
 //						 [view removeFromSuperview];
+						 
 					 }];
 }
 
